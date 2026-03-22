@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEON RAIDER: GLOBAL PRO</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --neon: #00ffcc; --pink: #ff00ff; --gold: #ffcc00; --red: #ff3333; --bg: #050508; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: var(--bg); font-family: 'Courier New', monospace; color: var(--neon); }
+        
+        #star-canvas { position: fixed; top: 0; left: 0; z-index: -1; }
+
+        /* --- AUTH SCREEN --- */
+        #auth-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .auth-box { background: rgba(0, 255, 204, 0.05); border: 2px solid var(--neon); padding: 30px; border-radius: 15px; width: 350px; text-align: center; box-shadow: 0 0 20px var(--neon); }
+        input { width: 90%; padding: 12px; margin: 10px 0; background: #000; border: 1px solid var(--neon); color: #fff; border-radius: 5px; outline: none; }
+        .hidden { display: none; }
+
+        /* --- GAME UI --- */
+        #game-ui { display: none; flex-direction: column; align-items: center; padding-top: 50px; height: 100vh; }
+        .main-frame { display: flex; background: rgba(0,0,0,0.8); border: 2px solid var(--neon); box-shadow: 0 0 30px var(--neon); padding: 20px; border-radius: 10px; width: 900px; gap: 20px; }
+        
+        #drill-zone { flex: 2; display: flex; flex-direction: column; align-items: center; border-right: 1px solid #222; padding-right: 20px; }
+        #drill-target { width: 180px; height: 180px; border: 4px solid var(--neon); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 60px; transition: 0.1s; position: relative; user-select: none; }
+        #drill-target.overload { border-color: var(--red); filter: grayscale(1); cursor: not-allowed; }
+        #drill-target:active:not(.overload) { transform: scale(0.95); border-color: var(--pink); box-shadow: 0 0 20px var(--pink); }
+
+        .progress-container { width: 100%; height: 20px; border: 1px solid var(--neon); margin: 20px 0; border-radius: 10px; overflow: hidden; }
+        #progress-bar { height: 100%; background: linear-gradient(90deg, var(--neon), var(--pink)); width: 0%; transition: 0.3s; }
+
+        #sidebar { flex: 1; display: flex; flex-direction: column; gap: 15px; }
+        .stat-box { font-size: 1.2rem; font-weight: bold; color: var(--pink); }
+        button { background: rgba(0, 255, 204, 0.1); border: 1px solid var(--neon); color: var(--neon); padding: 10px; cursor: pointer; font-family: inherit; font-weight: bold; border-radius: 5px; }
+        button:hover { background: var(--neon); color: #000; }
+        
+        .leaderboard { background: #111; padding: 10px; font-size: 0.8rem; border: 1px solid #333; height: 150px; overflow-y: auto; }
+        .lb-row { display: flex; justify-content: space-between; border-bottom: 1px solid #222; padding: 5px 0; }
+    </style>
+</head>
+<body>
+
+    <canvas id="star-canvas"></canvas>
+
+    <div id="auth-overlay">
+        <form id="login-form" class="auth-box" onsubmit="handleAuth(event, 'login')">
+            <h2 style="color:var(--pink)">NEON ACCESS</h2>
+            <input type="email" id="l-email" placeholder="EMAIL" required>
+            <input type="password" id="l-pass" placeholder="PASSWORD" required>
+            <button type="submit">ENTER SYSTEM</button>
+            <p style="font-size: 0.7rem; cursor: pointer; margin-top: 15px;" onclick="toggleView('reg')">NEW PILOT? REGISTER</p>
+        </form>
+
+        <form id="reg-form" class="auth-box hidden" onsubmit="handleAuth(event, 'reg')">
+            <h2 style="color:var(--neon)">CREATE PILOT</h2>
+            <input type="text" id="r-user" placeholder="USERNAME" maxlength="12" required>
+            <input type="email" id="r-email" placeholder="EMAIL" required>
+            <input type="password" id="r-pass" placeholder="PASSWORD" required>
+            <button type="submit">INITIALIZE</button>
+            <p onclick="toggleView('login')" style="cursor:pointer; margin-top: 15px;">BACK TO LOGIN</p>
+        </form>
+    </div>
+
+    <div id="game-ui">
+        <h1 style="letter-spacing: 10px; text-shadow: 0 0 15px var(--neon); margin-bottom: 20px;">NEON RAIDER</h1>
+        <div class="main-frame">
+            <div id="drill-zone">
+                <div id="combo-display" style="font-size: 1.5rem; color: var(--pink); height: 30px;">X1.0</div>
+                <div id="drill-target">💎</div>
+                <div class="progress-container"><div id="progress-bar"></div></div>
+                <div>DEPTH: <span id="depth-txt">0</span> / 10,000 KM</div>
+            </div>
+            <div id="sidebar">
+                <div>MATTER:</div>
+                <div id="matter-txt" class="stat-box">0</div>
+                <div class="leaderboard">
+                    <div style="text-align:center; color:var(--gold); margin-bottom:5px; border-bottom: 1px solid #444;">WORLD RANKINGS</div>
+                    <div id="lb-data">Syncing...</div>
+                </div>
+                <button onclick="buyUpgrade('drill')">UPGRADE DRILL (<span id="d-cost">10</span>)</button>
+                <button onclick="buyUpgrade('auto')">AUTO-BOTS (<span id="a-cost">50</span>)</button>
+                <button onclick="logout()" style="border-color:var(--red); color:var(--red); margin-top: 10px;">LOGOUT</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // --- DATABASE CONFIG ---
+    const SUPABASE_URL = 'https://otdtyzgxhgviwdxxspre.supabase.co'; 
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im90ZHR5emd4aGd2aXdkeHhzcHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwMTE0MjIsImV4cCI6MjA4NjU4NzQyMn0.OBgYtxGjiMbpgmHupGdjByKRf_L_8DewMuOV97gqFY0'; 
+    
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // --- CANVAS BACKGROUND ---
+    const canvas = document.getElementById('star-canvas');
+    const ctx = canvas.getContext('2d');
+    let stars = [];
+    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    window.onresize = resize; resize();
+    for(let i=0; i<150; i++) stars.push({x: Math.random()*canvas.width, y: Math.random()*canvas.height, s: Math.random()*2});
+    function draw() {
+        ctx.fillStyle = '#050508'; ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.fillStyle = '#fff';
+        stars.forEach(s => { ctx.fillRect(s.x, s.y, s.s, s.s); s.y += s.s/2; if(s.y > canvas.height) s.y = 0; });
+        requestAnimationFrame(draw);
+    }
+    draw();
+
+    // --- GAME STATE ---
+    let sessionUser = null;
+    let username = "";
+    let state = { matter: 0, depth: 0, power: 1, auto: 0, combo: 1, last: 0, clickLog: [] };
+    let isOverloaded = false;
+
+    function toggleView(v) {
+        document.querySelectorAll('.auth-box').forEach(b => b.classList.add('hidden'));
+        document.getElementById(v + '-form').classList.remove('hidden');
+    }
+
+    async function handleAuth(e, type) {
+        e.preventDefault();
+        if(type === 'reg') {
+            const u = document.getElementById('r-user').value;
+            const em = document.getElementById('r-email').value;
+            const p = document.getElementById('r-pass').value;
+            
+            const { data, error } = await sb.auth.signUp({ email: em, password: p });
+            if(error) return alert(error.message);
+            
+            const { error: dbError } = await sb.from('leaderboard').insert([
+                { id: data.user.id, username: u, matter: 0, depth: 0, power: 1, auto_bots: 0 }
+            ]);
+            
+            if(dbError) alert("Error: " + dbError.message);
+            else { alert("Registered! You can now login."); toggleView('login'); }
+        } else {
+            const em = document.getElementById('l-email').value;
+            const p = document.getElementById('l-pass').value;
+            
+            const { data, error } = await sb.auth.signInWithPassword({ email: em, password: p });
+            if(error) return alert(error.message);
+            
+            sessionUser = data.user;
+            await loadPlayerData();
+            document.getElementById('auth-overlay').style.display = 'none';
+            document.getElementById('game-ui').style.display = 'flex';
+            updateUI();
+            updateLB();
+        }
+    }
+
+    async function loadPlayerData() {
+        const { data, error } = await sb.from('leaderboard').select('*').eq('id', sessionUser.id).single();
+        if(data) {
+            username = data.username;
+            state.matter = data.matter;
+            state.depth = data.depth;
+            state.power = data.power;
+            state.auto = data.auto_bots;
+        }
+    }
+
+    async function updateLB() {
+        const { data } = await sb.from('leaderboard').select('username, matter').order('matter', { ascending: false }).limit(8);
+        if(data) {
+            document.getElementById('lb-data').innerHTML = data.map(i => 
+                `<div class="lb-row"><span>${i.username}</span><span>${Math.floor(i.matter).toLocaleString()}</span></div>`
+            ).join('');
+        }
+    }
+
+    function mine() {
+        if(isOverloaded || !sessionUser) return;
+        const now = Date.now();
+        state.clickLog.push(now);
+        state.clickLog = state.clickLog.filter(t => now - t < 1000);
+        if(state.clickLog.length > 15) { triggerOverload(); return; }
+
+        if(now - state.last < 400) state.combo = Math.min(state.combo + 0.1, 10);
+        else state.combo = 1;
+        state.last = now;
+
+        state.matter += state.power * state.combo;
+        state.depth += (state.power * state.combo) / 100;
+        updateUI();
+    }
+
+    function triggerOverload() {
+        isOverloaded = true;
+        const target = document.getElementById('drill-target');
+        target.classList.add('overload');
+        target.innerText = "⚠️";
+        setTimeout(() => {
+            isOverloaded = false;
+            target.classList.remove('overload');
+            target.innerText = "💎";
+            state.clickLog = [];
+        }, 5000);
+    }
+
+    function buyUpgrade(t) {
+        let cost = t === 'drill' ? Math.floor(10 * Math.pow(1.5, state.power)) : Math.floor(50 * Math.pow(1.5, state.auto + 1));
+        if(state.matter >= cost) {
+            state.matter -= cost;
+            if(t === 'drill') state.power++; else state.auto++;
+            updateUI();
+            saveToCloud();
+        }
+    }
+
+    async function saveToCloud() {
+        if(!sessionUser) return;
+        await sb.from('leaderboard').update({ 
+            matter: Math.floor(state.matter), 
+            depth: state.depth, 
+            power: state.power, 
+            auto_bots: state.auto 
+        }).eq('id', sessionUser.id);
+        updateLB();
+    }
+
+    function updateUI() {
+        document.getElementById('matter-txt').innerText = Math.floor(state.matter).toLocaleString();
+        document.getElementById('depth-txt').innerText = Math.floor(state.depth).toLocaleString();
+        document.getElementById('combo-display').innerText = state.combo > 1 ? "X" + state.combo.toFixed(1) : "";
+        document.getElementById('progress-bar').style.width = Math.min(100, (state.depth / 100)) + "%";
+        document.getElementById('d-cost').innerText = Math.floor(10 * Math.pow(1.5, state.power));
+        document.getElementById('a-cost').innerText = Math.floor(50 * Math.pow(1.5, state.auto + 1));
+    }
+
+    function logout() { saveToCloud(); sb.auth.signOut(); location.reload(); }
+
+    document.getElementById('drill-target').addEventListener('mousedown', (e) => { e.preventDefault(); mine(); });
+    window.addEventListener('keydown', (e) => { 
+        if(e.code === 'Space' && document.activeElement.tagName !== 'INPUT') { e.preventDefault(); mine(); }
+    });
+
+    setInterval(() => { if(state.auto > 0) { state.matter += state.auto/5; updateUI(); }}, 200);
+    setInterval(saveToCloud, 20000); 
+</script>
+</body>
+</html>
