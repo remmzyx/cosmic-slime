@@ -152,11 +152,11 @@ function escapeHtml(s) {
   return s.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
 }
 
-/*
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-const firebaseConfig = {
+//import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+//import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+/*const firebaseConfig = {
   apiKey: "AIzaSyCm3wqbkBx-PMFpH7Cym9t08F_gSVNoZCc",
   authDomain: "cosmic-slime.firebaseapp.com",
   databaseURL: "https://cosmic-slime-default-rtdb.firebaseio.com",
@@ -201,4 +201,4 @@ onValue(ref(db, "messages"), snapshot => {
   });
 
   chatBox.scrollTop = chatBox.scrollHeight;
-});
+});*/
