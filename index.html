@@ -6,6 +6,14 @@
   <script type="module" src="chat.js"></script>
     <link rel="stylesheet" href="css/main-v2.css">
 </head>
+  <script>
+  document.getElementById('chat-box').innerHTML = '<div style="color:green">UI loaded — inline script works</div>';
+  document.getElementById('chat-send').onclick = () => {
+    const t = document.getElementById('chat-input').value || 'test';
+    document.getElementById('chat-box').innerHTML += '<div><b>Local:</b> ' + t + '</div>';
+  };
+</script>
+
 <body>
   <h1>Cosmic Slime Escape</h1>
   <h2>Guide a tiny space slime through a neon asteroid maze. Collect shards, dodge drones, survive waves.</h2>
