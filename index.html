@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Cosmic Slime Escape</title>
+    <link rel="stylesheet" href="css/main-v2.css">
+</head>
+<body>
+  <h1>Cosmic Slime Escape</h1>
+  <h2>Guide a tiny space slime through a neon asteroid maze. Collect shards, dodge drones, survive waves.</h2>
+
+  <div id="game-container">
+    <div id="left-panel">
+      <div id="canvas-wrapper">
+        <canvas id="gameCanvas" width="640" height="480"></canvas>
+      </div>
+
+      <div id="hud">
+        <div class="hud-section">
+          <div class="hud-label">Score</div>
+          <div class="hud-value" id="scoreDisplay">0</div>
+        </div>
+        <div class="hud-section">
+          <div class="hud-label">Wave</div>
+          <div class="hud-value" id="waveDisplay">1</div>
+        </div>
+        <div class="hud-section">
+          <div class="hud-label">Health</div>
+          <div class="hud-value" id="healthDisplay">100</div>
+        </div>
+        <div class="hud-section">
+          <div class="hud-label">Shards</div>
+          <div class="hud-value" id="shardsDisplay">0</div>
+        </div>
+        <div class="hud-section">
+          <div class="hud-label">State</div>
+          <div class="hud-value" id="stateDisplay">Idle</div>
+        </div>
+        <div class="hud-section">
+          <button id="startButton">Start / Restart</button>
+        </div>
+      </div>
+
+      <div id="controls">
+        <div class="pill">
+          <span class="key">W</span>
+          <span class="key">A</span>
+          <span class="key">S</span>
+          <span class="key">D</span>
+          <span>Move slime</span>
+        </div>
+        <div class="pill">
+          <span class="key">Space</span>
+          <span>Dash</span>
+        </div>
+        <div class="pill">
+          <span class="key">P</span>
+          <span>Pause / Resume</span>
+        </div>
+        <div class="pill">
+          <span class="key">M</span>
+          <span>Toggle music</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="right-panel">
+      <input id="username-input" placeholder="Username..." style="width:70%;padding:6px;margin-bottom:5px;">
+
+      <div id="chat-box" style="background:#0003;padding:10px;border:1px solid #0ff;border-radius:8px;height:200px;overflow-y:auto;margin-top:10px;"></div>
+
+<input id="chat-input" placeholder="Type message..." style="width:70%;padding:6px;">
+<button id="chat-send">Send</button>
+
+      <div id="mission-box">
+        <div id="mission-title">Mission Brief</div>
+        <div id="mission-text">
+          You are a lost cosmic slime drifting through an abandoned neon asteroid belt. Each wave spawns hostile
+          drones and glowing shard clusters. Collect shards to charge your shield, dodge drones, and survive as many
+          waves as you can. The maze subtly shifts every round, so don’t get too comfortable.
+        </div>
+      </div>
+
+      <div id="stats-box">
+        <h3>Run Stats</h3>
+        <div id="stats-list">
+          <div class="stat-line">
+            <span class="stat-label">Best score:</span>
+            <span class="stat-value" id="bestScoreDisplay">0</span>
+          </div>
+          <div class="stat-line">
+            <span class="stat-label">Best wave:</span>
+            <span class="stat-value" id="bestWaveDisplay">1</span>
+          </div>
+          <div class="stat-line">
+            <span class="stat-label">Total runs:</span>
+            <span class="stat-value" id="totalRunsDisplay">0</span>
+          </div>
+          <div class="stat-line">
+            <span class="stat-label">Total shards:</span>
+            <span class="stat-value" id="totalShardsDisplay">0</span>
+          </div>
+          <div class="stat-line">
+            <span class="stat-label">Total time alive:</span>
+            <span class="stat-value" id="totalTimeDisplay">0s</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="difficulty-box">
+        
+        <h3>Difficulty</h3>
+        <div class="difficulty-row">
+          <button class="difficulty-btn active" data-diff="easy">Easy</button>
+          <button class="difficulty-btn" data-diff="normal">Normal</button>
+          <button class="difficulty-btn" data-diff="hard">Hard</button>
+          <button class="difficulty-btn" data-diff="chaos">Chaos</button>
+        </div>
+
+      </div>
+      <div id="tutorial-box">
+  <button id="tutorialButton">Play Tutorial</button>
+</div>
+
+      <div id="music-box">
+        <h3>Music Player</h3>
+        <div id="music-current">Current: <span id="musicCurrentTitle">None</span></div>
+        <div id="music-controls">
+          <button class="music-btn" id="musicPrevBtn">Prev</button>
+          <button class="music-btn" id="musicPlayPauseBtn">Play</button>
+          <button class="music-btn" id="musicNextBtn">Next</button>
+        </div>
+        <div id="music-list"></div>
+      </div>
+
+      <div id="log"></div>
+    </div>
+  </div>
+
+  <div id="footer-note">
+    This is just a local, silly HTML/JS game. No servers, no tracking, just vibes and cosmic slime.
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCm3wqbkBx-PMFpH7Cym9t08F_gSVNoZCc",
+    authDomain: "cosmic-slime.firebaseapp.com",
+    databaseURL: "https://cosmic-slime-default-rtdb.firebaseio.com",
+    projectId: "cosmic-slime",
+    storageBucket: "cosmic-slime.firebasestorage.app",
+    messagingSenderId: "646544734520",
+    appId: "1:646544734520:web:38c0e17e3e479dd77569cd"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+</script>
+
+<script>
+  const chatBox = document.getElementById("chat-box");
+  const chatInput = document.getElementById("chat-input");
+  const chatSend = document.getElementById("chat-send");
+  const usernameInput = document.getElementById("username-input");
+
+  chatSend.onclick = () => {
+    const msg = chatInput.value.trim();
+    const user = usernameInput.value.trim() || "Anonymous";
+
+    if (!msg) return;
+
+    db.ref("chat").push({
+      user: user,
+      text: msg,
+      time: Date.now()
+    });
+
+    chatInput.value = "";
+  };
+
+  db.ref("chat").on("child_added", snapshot => {
+    const data = snapshot.val();
+    const div = document.createElement("div");
+    div.textContent = data.user + ": " + data.text;
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  });
+</script>
+
+<script>
+  window.addEventListener("keydown", function(e) {
+    // If typing in chat, allow space
+    if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") {
+      return;
+    }
+  });
+</script>
+
+
+
+  <!-- Audio element (no source, playlist will control it) -->
+  <audio id="bgMusic"></audio>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const scoreDisplay = document.getElementById("scoreDisplay");
+    const waveDisplay = document.getElementById("waveDisplay");
+    const healthDisplay = document.getElementById("healthDisplay");
+    const shardsDisplay = document.getElementById("shardsDisplay");
+    const stateDisplay = document.getElementById("stateDisplay");
+
+    const bestScoreDisplay = document.getElementById("bestScoreDisplay");
+    const bestWaveDisplay = document.getElementById("bestWaveDisplay");
+    const totalRunsDisplay = document.getElementById("totalRunsDisplay");
+    const totalShardsDisplay = document.getElementById("totalShardsDisplay");
+    const totalTimeDisplay = document.getElementById("totalTimeDisplay");
+
+    const startButton = document.getElementById("startButton");
+    const logBox = document.getElementById("log");
+    const difficultyButtons = document.querySelectorAll(".difficulty-btn");
+
+    const musicElement = document.getElementById("bgMusic");
+    const musicCurrentTitle = document.getElementById("musicCurrentTitle");
+    const musicListContainer = document.getElementById("music-list");
+    const musicPrevBtn = document.getElementById("musicPrevBtn");
+    const musicPlayPauseBtn = document.getElementById("musicPlayPauseBtn");
+    const musicNextBtn = document.getElementById("musicNextBtn");
+
+    let gameState = {
+        
+      running: false,
+      paused: false,
+      score: 0,
+      wave: 1,
+      health: 100,
+      shards: 0,
+      timeAlive: 0,
+      lastTimeStamp: 0,
+      difficulty: "easy",
+      bestScore: 0,
+      bestWave: 1,
+      totalRuns: 0,
+      totalShards: 0,
+totalTimeAlive: 0,
+
+// tutorial
+inTutorial: false,
+tutorialStep: 0,
+    };
+
+
+    // =========================
+// TUTORIAL SYSTEM
+// =========================
+let tutorial = {
+  active: false,
+  step: 0,
+  steps: [
+    "Use W A S D to move your slime.",
+    "Collect a shard cluster.",
+    "Avoid drones — touching them deals damage.",
+    "Press SPACE to dash.",
+    "Great! Tutorial complete!"
+  ]
+};
+
+function startTutorial() {
+  tutorial.active = true;
+  tutorial.step = 0;
+  logMessage("Tutorial started.");
+  gameState.running = true;
+  gameState.paused = false;
+  resetGame();
+}
+
+function advanceTutorial() {
+  tutorial.step++;
+  if (tutorial.step >= tutorial.steps.length) {
+    tutorial.active = false;
+    logMessage("Tutorial complete!");
+    return;
+  }
+  logMessage("Tutorial: " + tutorial.steps[tutorial.step]);
+}
+
+
+  
+
+    const player = {
+      x: canvas.width / 2,
+      y: canvas.height / 2,
+      radius: 14,
+      color: "#00ffa3",
+      vx: 0,
+      vy: 0,
+      speed: 2.1,
+      maxSpeed: 3.4,
+      friction: 0.88,
+      dashPower: 5.5,
+      dashCooldown: 1.2,
+      dashTimer: 0,
+      invincibleTimer: 0,
+      pulse: 0
+    };
+
+    const keys = {
+      w: false,
+      a: false,
+      s: false,
+      d: false,
+      space: false,
+      p: false,
+      m: false
+    };
+
+    let drones = [];
+    let shards = [];
+    let particles = [];
+    let mazeLines = [];
+
+    function randRange(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    function randInt(min, max) {
+      return Math.floor(randRange(min, max + 1));
+    }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function distance(x1, y1, x2, y2) {
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    function logMessage(text) {
+      const entry = document.createElement("div");
+      entry.className = "log-entry";
+      const timeSpan = document.createElement("span");
+      timeSpan.className = "time";
+      const now = new Date();
+      const timeStr =
+        now.getHours().toString().padStart(2, "0") +
+        ":" +
+        now.getMinutes().toString().padStart(2, "0") +
+        ":" +
+        now.getSeconds().toString().padStart(2, "0");
+      timeSpan.textContent = "[" + timeStr + "]";
+      const textSpan = document.createElement("span");
+      textSpan.className = "text";
+      textSpan.textContent = " " + text;
+      entry.appendChild(timeSpan);
+      entry.appendChild(textSpan);
+      logBox.appendChild(entry);
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    function setStateLabel(text) {
+      stateDisplay.textContent = text;
+    }
+
+    function saveGame() {
+      const data = {
+        bestScore: gameState.bestScore,
+        bestWave: gameState.bestWave,
+        totalRuns: gameState.totalRuns,
+        totalShards: gameState.totalShards,
+        totalTimeAlive: gameState.totalTimeAlive,
+        difficulty: gameState.difficulty
+      };
+      localStorage.setItem("cosmicSlimeSave", JSON.stringify(data));
+    }
+
+    function loadGame() {
+      const raw = localStorage.getItem("cosmicSlimeSave");
+      if (!raw) return;
+      try {
+        const data = JSON.parse(raw);
+        gameState.bestScore = data.bestScore ?? 0;
+        gameState.bestWave = data.bestWave ?? 1;
+        gameState.totalRuns = data.totalRuns ?? 0;
+        gameState.totalShards = data.totalShards ?? 0;
+        gameState.totalTimeAlive = data.totalTimeAlive ?? 0;
+        gameState.difficulty = data.difficulty ?? "easy";
+        setDifficulty(gameState.difficulty);
+        logMessage("Save loaded.");
+      } catch (e) {
+        console.warn("Save corrupted, ignoring.");
+      }
+    }
+
+    const difficultyConfig = {
+      easy: {
+        droneSpeed: 1.1,
+        droneCountBase: 4,
+        droneCountPerWave: 1,
+        shardCountBase: 6,
+        shardCountPerWave: 1,
+        damageOnHit: 12,
+        shardHeal: 4
+      },
+      normal: {
+        droneSpeed: 1.6,
+        droneCountBase: 6,
+        droneCountPerWave: 2,
+        shardCountBase: 5,
+        shardCountPerWave: 1,
+        damageOnHit: 16,
+        shardHeal: 3
+      },
+      hard: {
+        droneSpeed: 2.1,
+        droneCountBase: 7,
+        droneCountPerWave: 3,
+        shardCountBase: 4,
+        shardCountPerWave: 1,
+        damageOnHit: 20,
+        shardHeal: 3
+      },
+      chaos: {
+        droneSpeed: 2.7,
+        droneCountBase: 8,
+        droneCountPerWave: 4,
+        shardCountBase: 4,
+        shardCountPerWave: 2,
+        damageOnHit: 24,
+        shardHeal: 2
+      }
+    };
+
+    function setDifficulty(diff) {
+      if (!difficultyConfig[diff]) return;
+      gameState.difficulty = diff;
+      difficultyButtons.forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.diff === diff);
+      });
+      logMessage("Difficulty set to " + diff.toUpperCase() + ".");
+      saveGame();
+    }
+
+    difficultyButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        setDifficulty(btn.dataset.diff);
+      });
+    });
+
+    function generateMaze() {
+      mazeLines = [];
+      const segments = 40;
+      for (let i = 0; i < segments; i++) {
+        const x1 = randRange(20, canvas.width - 20);
+        const y1 = randRange(20, canvas.height - 20);
+        const x2 = x1 + randRange(-80, 80);
+        const y2 = y1 + randRange(-80, 80);
+        mazeLines.push({
+          x1,
+          y1,
+          x2,
+          y2,
+          alpha: randRange(0.1, 0.4),
+          width: randRange(1, 3)
+        });
+      }
+    }
+
+    function spawnDronesForWave(wave) {
+      drones = [];
+      const cfg = difficultyConfig[gameState.difficulty];
+      const count = cfg.droneCountBase + cfg.droneCountPerWave * (wave - 1);
+      for (let i = 0; i < count; i++) {
+        let x, y;
+        if (Math.random() < 0.5) {
+          x = Math.random() < 0.5 ? -30 : canvas.width + 30;
+          y = randRange(0, canvas.height);
+        } else {
+          x = randRange(0, canvas.width);
+          y = Math.random() < 0.5 ? -30 : canvas.height + 30;
+        }
+        drones.push({
+          x,
+          y,
+          radius: randRange(8, 14),
+          color: "#ff4b81",
+          speed: cfg.droneSpeed + Math.random() * 0.6,
+          wobblePhase: Math.random() * Math.PI * 2,
+          wobbleSpeed: randRange(0.02, 0.05),
+          wobbleAmount: randRange(4, 10),
+          hitFlash: 0
+        });
+      }
+      logMessage("Wave " + wave + ": " + count + " drones detected.");
+    }
+
+    function spawnShardsForWave(wave) {
+      shards = [];
+      const cfg = difficultyConfig[gameState.difficulty];
+      const count = cfg.shardCountBase + cfg.shardCountPerWave * (wave - 1);
+      for (let i = 0; i < count; i++) {
+        const x = randRange(40, canvas.width - 40);
+        const y = randRange(40, canvas.height - 40);
+        shards.push({
+          x,
+          y,
+          radius: randRange(6, 10),
+          color: "#00f5ff",
+          pulse: Math.random() * Math.PI * 2,
+          value: randInt(3, 8)
+        });
+      }
+      logMessage("Wave " + wave + ": " + count + " shard clusters spawned.");
+    }
+
+    function spawnParticles(x, y, color, count) {
+      for (let i = 0; i < count; i++) {
+        particles.push({
+          x,
+          y,
+          vx: randRange(-2, 2),
+          vy: randRange(-2, 2),
+          life: randRange(0.4, 1.0),
+          maxLife: 1.0,
+          color
+        });
+      }
+    }
+
+    function resetPlayer() {
+      player.x = canvas.width / 2;
+      player.y = canvas.height / 2;
+      player.vx = 0;
+      player.vy = 0;
+      player.dashTimer = 0;
+      player.invincibleTimer = 0;
+    }
+
+    function resetGame() {
+      gameState.score = 0;
+      gameState.wave = 1;
+      gameState.health = 100;
+      gameState.shards = 0;
+      gameState.timeAlive = 0;
+      gameState.lastTimeStamp = performance.now();
+      drones = [];
+      shards = [];
+      particles = [];
+      generateMaze();
+      resetPlayer();
+      spawnDronesForWave(gameState.wave);
+      spawnShardsForWave(gameState.wave);
+      updateHUD();
+      setStateLabel("Running");
+      logMessage("New run started. Good luck, cosmic slime.");
+    }
+
+    function updateHUD() {
+      scoreDisplay.textContent = Math.floor(gameState.score);
+      waveDisplay.textContent = gameState.wave;
+      healthDisplay.textContent = Math.max(0, Math.floor(gameState.health));
+      shardsDisplay.textContent = gameState.shards;
+      bestScoreDisplay.textContent = Math.floor(gameState.bestScore);
+      bestWaveDisplay.textContent = gameState.bestWave;
+      totalRunsDisplay.textContent = gameState.totalRuns;
+      totalShardsDisplay.textContent = gameState.totalShards;
+      totalTimeDisplay.textContent = Math.floor(gameState.totalTimeAlive) + "s";
+    }
+
+    function gameLoop(timestamp) {
+      requestAnimationFrame(gameLoop);
+      if (!gameState.running || gameState.paused) {
+        drawScene(0);
+        return;
+      }
+      const dt = (timestamp - gameState.lastTimeStamp) / 1000;
+      gameState.lastTimeStamp = timestamp;
+      gameState.timeAlive += dt;
+      update(dt);
+      drawScene(dt);
+    }
+
+    function update(dt) {
+        // Tutorial progression logic
+if (tutorial.active) {
+  // Step 0: Move
+  if (tutorial.step === 0) {
+    if (player.vx !== 0 || player.vy !== 0) advanceTutorial();
+  }
+
+  // Step 1: Collect shard
+  if (tutorial.step === 1) {
+    if (gameState.shards > 0) advanceTutorial();
+  }
+
+  // Step 2: Take damage
+  if (tutorial.step === 2) {
+    if (gameState.health < 100) advanceTutorial();
+  }
+
+  // Step 3: Dash
+  if (tutorial.step === 3) {
+    if (player.invincibleTimer > 0) advanceTutorial();
+  }
+}
+
+      handleInput(dt);
+      updatePlayer(dt);
+      updateDrones(dt);
+      updateShards(dt);
+      updateParticles(dt);
+      checkWaveCompletion();
+      updateHUD();
+    }
+
+window.addEventListener("keydown", (e) => {
+  // allow typing in chat
+  if (e.target.tagName === "INPUT") return;
+
+  const key = e.key.toLowerCase();
+
+  if (key === "w") keys.w = true;
+  if (key === "a") keys.a = true;
+  if (key === "s") keys.s = true;
+  if (key === "d") keys.d = true;
+
+  // ⭐ your original logic, but fixed
+  if (key === " ") {
+    e.preventDefault(); // stop scroll
+
+    if (!keys.space) {
+      attemptDash();
+    }
+
+    keys.space = true;
+  }
+
+if (key === "p") {
+  if (!keys.p) togglePause();
+  keys.p = true;
+}
+
+if (key === "m") {
+  if (!keys.m) toggleMusic();
+  keys.m = true;
+}
+});
+
+
+
+
+    window.addEventListener("keyup", (e) => {
+      const key = e.key.toLowerCase();
+      if (key === "w") keys.w = false;
+      if (key === "a") keys.a = false;
+      if (key === "s") keys.s = false;
+      if (key === "d") keys.d = false;
+      if (key === " ") keys.space = false;
+      if (key === "p") keys.p = false;
+      if (key === "m") keys.m = false;
+    });
+
+    function handleInput(dt) {
+      let ax = 0;
+      let ay = 0;
+      if (keys.w) ay -= 1;
+      if (keys.s) ay += 1;
+      if (keys.a) ax -= 1;
+      if (keys.d) ax += 1;
+
+      const len = Math.sqrt(ax * ax + ay * ay);
+      if (len > 0) {
+        ax /= len;
+        ay /= len;
+      }
+
+      player.vx += ax * player.speed;
+      player.vy += ay * player.speed;
+
+      player.vx *= player.friction;
+      player.vy *= player.friction;
+
+      const speed = Math.sqrt(player.vx * player.vx + player.vy * player.vy);
+      if (speed > player.maxSpeed) {
+        player.vx = (player.vx / speed) * player.maxSpeed;
+        player.vy = (player.vy / speed) * player.maxSpeed;
+      }
+
+      if (player.dashTimer > 0) {
+        player.dashTimer -= dt;
+      }
+      if (player.invincibleTimer > 0) {
+        player.invincibleTimer -= dt;
+      }
+    }
+
+    function attemptDash() {
+      if (player.dashTimer > 0) return;
+
+      const dirX = player.vx;
+      const dirY = player.vy;
+      const len = Math.sqrt(dirX * dirX + dirY * dirY);
+
+      if (len === 0) {
+        player.vx = randRange(-1, 1) * player.dashPower;
+        player.vy = randRange(-1, 1) * player.dashPower;
+      } else {
+        player.vx += (dirX / len) * player.dashPower;
+        player.vy += (dirY / len) * player.dashPower;
+      }
+
+      player.dashTimer = player.dashCooldown;
+      player.invincibleTimer = 0.35;
+
+      spawnParticles(player.x, player.y, "#00ffa3", 18);
+      logMessage("Dash! Slime zips through the void.");
+    }
+
+    function togglePause() {
+      if (!gameState.running) return;
+      gameState.paused = !gameState.paused;
+      setStateLabel(gameState.paused ? "Paused" : "Running");
+      logMessage(gameState.paused ? "Game paused." : "Game resumed.");
+      if (!gameState.paused) {
+        gameState.lastTimeStamp = performance.now();
+      }
+    }
+
+    function updatePlayer(dt) {
+      player.x += player.vx;
+      player.y += player.vy;
+
+      player.x = clamp(player.x, player.radius + 4, canvas.width - player.radius - 4);
+      player.y = clamp(player.y, player.radius + 4, canvas.height - player.radius - 4);
+
+      player.pulse += dt * 4;
+    }
+
+    function updateDrones(dt) {
+      const cfg = difficultyConfig[gameState.difficulty];
+      for (let i = drones.length - 1; i >= 0; i--) {
+        const d = drones[i];
+        const dx = player.x - d.x;
+        const dy = player.y - d.y;
+        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        const dirX = dx / dist;
+        const dirY = dy / dist;
+
+        d.wobblePhase += d.wobbleSpeed;
+        const wobble = Math.sin(d.wobblePhase) * d.wobbleAmount;
+
+        d.x += dirX * d.speed + Math.cos(d.wobblePhase) * 0.3;
+        d.y += dirY * d.speed + Math.sin(d.wobblePhase) * 0.3;
+
+        d.x += (dy / dist) * (wobble * 0.02);
+        d.y -= (dx / dist) * (wobble * 0.02);
+
+        if (d.hitFlash > 0) {
+          d.hitFlash -= dt;
+        }
+
+        const distToPlayer = distance(d.x, d.y, player.x, player.y);
+        if (distToPlayer < d.radius + player.radius) {
+          if (player.invincibleTimer <= 0) {
+            const damage = cfg.damageOnHit;
+            gameState.health -= damage;
+            player.invincibleTimer = 0.6;
+            spawnParticles(player.x, player.y, "#ff4b81", 20);
+            d.hitFlash = 0.3;
+            logMessage("Drone collision! -" + damage + " HP.");
+            if (gameState.health <= 0) {
+              gameOver("Your slime got shredded by neon drones.");
+            }
+          }
+        }
+
+        if (
+          d.x < -80 ||
+          d.x > canvas.width + 80 ||
+          d.y < -80 ||
+          d.y > canvas.height + 80
+        ) {
+          d.x = randRange(0, canvas.width);
+          d.y = randRange(0, canvas.height);
+        }
+      }
+    }
+
+    function updateShards(dt) {
+      const cfg = difficultyConfig[gameState.difficulty];
+      for (let i = shards.length - 1; i >= 0; i--) {
+        const s = shards[i];
+        s.pulse += dt * 3;
+        const distToPlayer = distance(s.x, s.y, player.x, player.y);
+        if (distToPlayer < s.radius + player.radius + 4) {
+          gameState.shards += s.value;
+          gameState.totalShards += s.value;
+          gameState.score += s.value * 10;
+          const heal = cfg.shardHeal;
+          gameState.health = clamp(gameState.health + heal, 0, 100);
+          spawnParticles(s.x, s.y, "#00f5ff", 16);
+          logMessage(
+            "Collected shard cluster (+" +
+              s.value +
+              " shards, +" +
+              heal +
+              " HP, +" +
+              s.value * 10 +
+              " score)."
+          );
+          shards.splice(i, 1);
+        }
+      }
+    }
+
+    function updateParticles(dt) {
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life -= dt;
+        if (p.life <= 0) {
+          particles.splice(i, 1);
+        }
+      }
+    }
+
+    function checkWaveCompletion() {
+      if (shards.length === 0) {
+        const bonus = 50 + gameState.wave * 20;
+        gameState.score += bonus;
+        logMessage("Wave " + gameState.wave + " cleared! Bonus +" + bonus + " score.");
+        gameState.wave++;
+        spawnDronesForWave(gameState.wave);
+        spawnShardsForWave(gameState.wave);
+      }
+    }
+
+    function gameOver(reason) {
+      gameState.running = false;
+      setStateLabel("Game Over");
+      logMessage("Game over: " + reason);
+
+      gameState.totalRuns++;
+      gameState.totalTimeAlive += gameState.timeAlive;
+
+      if (gameState.score > gameState.bestScore) {
+        gameState.bestScore = gameState.score;
+        logMessage("New best score: " + Math.floor(gameState.bestScore) + "!");
+      }
+      if (gameState.wave > gameState.bestWave) {
+        gameState.bestWave = gameState.wave;
+        logMessage("New best wave: " + gameState.bestWave + "!");
+      }
+
+      updateHUD();
+      saveGame();
+    }
+
+    function drawScene(dt) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+     // drawBackgroundGrid();
+      drawMazeLines();
+      drawShards();
+      drawDrones();
+      drawPlayer();
+      drawParticles();
+      drawOverlay();
+      // Tutorial overlay
+if (tutorial.active) {
+  ctx.save();
+  ctx.fillStyle = "rgba(0,0,0,0.6)";
+  ctx.fillRect(0, 0, canvas.width, 40);
+  ctx.fillStyle = "#00ffa3";
+  ctx.font = "16px 'Segoe UI'";
+  ctx.textAlign = "center";
+  ctx.fillText("Tutorial: " + tutorial.steps[tutorial.step], canvas.width / 2, 25);
+  ctx.restore();
+}
+
+    }
+
+    function drawBackgroundGrid() {
+     ctx.save();
+      ctx.strokeStyle = "rgba(0, 255, 255, 0.05)";
+      ctx.lineWidth = 1;
+      const spacing = 40;
+      for (let x = 0; x <= canvas.width; x += spacing) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+      }
+      for (let y = 0; y <= canvas.height; y += spacing) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawMazeLines() {
+      ctx.save();
+      mazeLines.forEach((line) => {
+        ctx.strokeStyle = "rgba(0, 255, 255," + line.alpha + ")";
+        ctx.lineWidth = line.width;
+        ctx.beginPath();
+        ctx.moveTo(line.x1, line.y1);
+        ctx.lineTo(line.x2, line.y2);
+        ctx.stroke();
+      });
+      ctx.restore();
+    }
+
+    function drawPlayer() {
+      ctx.save();
+      const pulseScale = 1 + Math.sin(player.pulse) * 0.08;
+      const radius = player.radius * pulseScale;
+
+      const gradient = ctx.createRadialGradient(
+        player.x - radius * 0.3,
+        player.y - radius * 0.3,
+        radius * 0.2,
+        player.x,
+        player.y,
+        radius
+      );
+      gradient.addColorStop(0, "#e0fff7");
+      gradient.addColorStop(0.4, "#00ffa3");
+      gradient.addColorStop(1, "rgba(0, 255, 163, 0)");
+
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.arc(player.x, player.y, radius, 0, Math.PI * 2);
+      ctx.fill();
+
+      if (player.invincibleTimer > 0) {
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.9)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(player.x, player.y, radius + 4, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+      ctx.beginPath();
+      ctx.arc(player.x - radius * 0.3, player.y - radius * 0.2, radius * 0.25, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(player.x + radius * 0.1, player.y - radius * 0.2, radius * 0.25, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.6)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(player.x, player.y + radius * 0.2, radius * 0.4, 0.2 * Math.PI, 0.8 * Math.PI);
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    function drawDrones() {
+      ctx.save();
+      drones.forEach((d) => {
+        const gradient = ctx.createRadialGradient(
+          d.x - d.radius * 0.3,
+          d.y - d.radius * 0.3,
+          d.radius * 0.2,
+          d.x,
+          d.y,
+          d.radius
+        );
+        gradient.addColorStop(0, "#ffe6f0");
+        gradient.addColorStop(0.4, d.color);
+        gradient.addColorStop(1, "rgba(255, 75, 129, 0)");
+
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(d.x, d.y, d.radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle =
+          d.hitFlash > 0 ? "rgba(255, 255, 255, 0.9)" : "rgba(255, 75, 129, 0.7)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(d.x, d.y, d.radius + 3, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+        ctx.beginPath();
+        ctx.arc(d.x - d.radius * 0.3, d.y - d.radius * 0.2, d.radius * 0.3, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.restore();
+    }
+
+    function drawShards() {
+      ctx.save();
+      shards.forEach((s) => {
+        const pulse = 1 + Math.sin(s.pulse) * 0.2;
+        const r = s.radius * pulse;
+
+        ctx.fillStyle = "rgba(0, 245, 255, 0.15)";
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, r + 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = s.color;
+        ctx.beginPath();
+        ctx.moveTo(s.x, s.y - r);
+        ctx.lineTo(s.x + r * 0.7, s.y);
+        ctx.lineTo(s.x, s.y + r);
+        ctx.lineTo(s.x - r * 0.7, s.y);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = "rgba(224, 255, 255, 0.8)";
+        ctx.beginPath();
+        ctx.arc(s.x - r * 0.2, s.y - r * 0.3, r * 0.3, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.restore();
+    }
+
+    function drawParticles() {
+      ctx.save();
+      particles.forEach((p) => {
+        const alpha = clamp(p.life / p.maxLife, 0, 1);
+        ctx.fillStyle = p.color.replace(")", "," + alpha + ")");
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.restore();
+    }
+
+    function drawOverlay() {
+      if (!gameState.running) {
+        ctx.save();
+        ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#e0faff";
+        ctx.textAlign = "center";
+        ctx.font = "24px 'Segoe UI', sans-serif";
+        ctx.fillText("Cosmic Slime Escape", canvas.width / 2, canvas.height / 2 - 40);
+        ctx.font = "14px 'Segoe UI', sans-serif";
+        ctx.fillText("Press the Start / Restart button to begin.", canvas.width / 2, canvas.height / 2);
+        ctx.fillText("WASD to move, Space to dash, P to pause, M for music.", canvas.width / 2, canvas.height / 2 + 24);
+        ctx.restore();
+      } else if (gameState.paused) {
+        ctx.save();
+        ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#e0faff";
+        ctx.textAlign = "center";
+        ctx.font = "22px 'Segoe UI', sans-serif";
+        ctx.fillText("Paused", canvas.width / 2, canvas.height / 2 - 10);
+        ctx.font = "14px 'Segoe UI', sans-serif";
+        ctx.fillText("Press P to resume.", canvas.width / 2, canvas.height / 2 + 16);
+        ctx.restore();
+      }
+    }
+
+    // =========================
+    // MUSIC PLAYLIST SYSTEM
+    // =========================
+    const playlist = [
+      {
+        title: "Song 1",
+        url: "https://files.catbox.moe/gyy05n.mp3"
+      },
+      {
+        title: "Song 2",
+        url: "https://files.catbox.moe/olzvrn.mp3"
+      },
+      {
+        title: "Song 3",
+        url: "https://files.catbox.moe/irbwk2.mp3"
+      }
+    ];
+
+    let currentTrackIndex = 0;
+    let isMusicPlaying = false;
+
+    function buildMusicListUI() {
+      musicListContainer.innerHTML = "";
+      playlist.forEach((track, index) => {
+        const item = document.createElement("div");
+        item.className = "music-track";
+        item.dataset.index = index;
+
+        const titleSpan = document.createElement("span");
+        titleSpan.className = "music-track-title";
+        titleSpan.textContent = track.title;
+
+        const indexSpan = document.createElement("span");
+        indexSpan.className = "music-track-index";
+        indexSpan.textContent = "#" + (index + 1);
+
+        item.appendChild(titleSpan);
+        item.appendChild(indexSpan);
+
+        item.addEventListener("click", () => {
+          playTrack(index);
+        });
+
+        musicListContainer.appendChild(item);
+      });
+
+      updateMusicUI();
+    }
+
+    function loadTrack(index) {
+      currentTrackIndex = index;
+      const track = playlist[currentTrackIndex];
+      musicElement.src = track.url;
+      musicCurrentTitle.textContent = track.title;
+      updateMusicUI();
+    }
+
+    function playTrack(index) {
+      loadTrack(index);
+      musicElement.volume = 0.4;
+      musicElement.play();
+      isMusicPlaying = true;
+      musicPlayPauseBtn.textContent = "Pause";
+      logMessage("Playing: " + playlist[currentTrackIndex].title);
+      updateMusicUI();
+    }
+
+    function playCurrentTrack() {
+      if (!musicElement.src) {
+        loadTrack(currentTrackIndex);
+      }
+      musicElement.volume = 0.4;
+      musicElement.play();
+      isMusicPlaying = true;
+      musicPlayPauseBtn.textContent = "Pause";
+      logMessage("Music ON.");
+      updateMusicUI();
+    }
+
+    function pauseMusic() {
+      musicElement.pause();
+      isMusicPlaying = false;
+      musicPlayPauseBtn.textContent = "Play";
+      logMessage("Music OFF.");
+      updateMusicUI();
+    }
+
+    function toggleMusic() {
+      if (isMusicPlaying) {
+        pauseMusic();
+      } else {
+        playCurrentTrack();
+      }
+    }
+
+    function nextTrack() {
+      currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
+      playTrack(currentTrackIndex);
+    }
+
+    function prevTrack() {
+      currentTrackIndex = (currentTrackIndex - 1 + playlist.length) % playlist.length;
+      playTrack(currentTrackIndex);
+    }
+
+    function updateMusicUI() {
+      const items = musicListContainer.querySelectorAll(".music-track");
+      items.forEach((item) => {
+        const idx = parseInt(item.dataset.index, 10);
+        item.classList.toggle("active", idx === currentTrackIndex && isMusicPlaying);
+      });
+    }
+
+    musicElement.addEventListener("ended", () => {
+      nextTrack();
+    });
+
+    musicPrevBtn.addEventListener("click", () => {
+      prevTrack();
+    });
+
+    musicNextBtn.addEventListener("click", () => {
+      nextTrack();
+    });
+
+    musicPlayPauseBtn.addEventListener("click", () => {
+      toggleMusic();
+    });
+
+    startButton.addEventListener("click", () => {
+      gameState.running = true;
+      gameState.paused = false;
+      resetGame();
+      tutorialButton.addEventListener("click", () => {
+  startTutorial();
+});
+
+    });
+
+    generateMaze();
+    loadGame();
+    updateHUD();
+    buildMusicListUI();
+    loadTrack(currentTrackIndex);
+
+    gameState.lastTimeStamp = performance.now();
+    requestAnimationFrame(gameLoop);
+  </script>
+</body>
+</html>
