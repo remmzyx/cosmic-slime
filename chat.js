@@ -1,8 +1,11 @@
 // public/chat.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, push, onValue, set, remove, onChildAdded } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-/* ====== PASTE YOUR FIREBASE CONFIG FROM CONSOLE HERE ====== */
+/* ====== PASTE YOUR FIREBASE CONFIG FROM CONSOLE HERE ======
+   Replace the placeholder values below with the exact config from
+   Firebase Console → Project Settings → Your apps → Web app
+*/
 const firebaseConfig = {
   apiKey: "AIzaSyCm3wqbkBx-PMFpH7Cym9t08F_gSVNoZCc",
   authDomain: "cosmic-slime.firebaseapp.com",
@@ -20,8 +23,8 @@ const db = getDatabase(app);
 
 /* ---------------- Moderation helpers (client-side) ---------------- */
 
-// Local fallback banned list (keep sanitized; load full list from DB if needed)
-let bannedWords = ["badword", "exampleword"]; // expand safely
+// Local fallback banned list (keep sanitized; expand safely)
+let bannedWords = ["badword", "exampleword"];
 
 // Optional: load banned list from Firebase once at startup
 function loadBannedWordsFromDB() {
@@ -100,7 +103,6 @@ const COOLDOWN_MS = 1200; // 1.2s cooldown
 chatSend.addEventListener("click", async () => {
   const now = Date.now();
   if (now - lastSent < COOLDOWN_MS) {
-    // simple UX feedback
     chatSend.disabled = true;
     setTimeout(() => chatSend.disabled = false, COOLDOWN_MS - (now - lastSent));
     return;
@@ -119,11 +121,11 @@ chatSend.addEventListener("click", async () => {
     return;
   }
 
-  // Prepare payload: send to messages_pending so server/moderator can act
+  // Send to pending so server/moderator can act
   const payload = {
     username,
     text: result.text,
-    original: result.action === "censor" ? raw : undefined, // optional store original for audit
+    original: result.action === "censor" ? raw : undefined, // optional for audit
     status: result.action === "flag" ? "flagged" : "pending",
     matched: result.matched || null,
     time: Date.now()
@@ -149,7 +151,7 @@ function escapeHtml(s) {
   if (!s) return "";
   return s.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
 }
------------------------------------------------------------------
+
 /*
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
