@@ -1,3 +1,24 @@
+document.addEventListener('DOMContentLoaded', () => {
+  const chatBox = document.getElementById('chat-box');
+  const chatInput = document.getElementById('chat-input');
+  const chatSend = document.getElementById('chat-send');
+  const usernameInput = document.getElementById('username-input');
+
+  // safe guard: if any element missing, log and stop
+  if (!chatBox || !chatInput || !chatSend || !usernameInput) {
+    console.error('Missing chat UI element(s)', { chatBox: !!chatBox, chatInput: !!chatInput, chatSend: !!chatSend, usernameInput: !!usernameInput });
+    return;
+  }
+
+  // existing event handlers and listeners go here
+  chatSend.addEventListener('click', () => {
+    // your send logic
+  });
+
+  // ...rest of your code that uses these elements
+});
+
+
 // public/chat.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
