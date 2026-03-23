@@ -6,11 +6,12 @@ const firebaseConfig = {
   authDomain: "cosmic-slime.firebaseapp.com",
   databaseURL: "https://cosmic-slime-default-rtdb.firebaseio.com",
   projectId: "cosmic-slime",
-  storageBucket: "cosmic-slime.appspot.com",
-  messagingSenderId: "446454743520",
-  appId: "1:446454743520:web:38c0e17e3e479dd77569cd",
-  measurementId: "G-3XQHSL1XQ0"
+  storageBucket: "cosmic-slime.firebasestorage.app",
+  messagingSenderId: "646544734520",
+  appId: "1:646544734520:web:11732c1f79adb0687569cd",
+  measurementId: "G-4CL3ZWEDJT"
 };
+
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
