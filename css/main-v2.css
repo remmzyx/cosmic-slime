@@ -215,21 +215,25 @@
       opacity: 0.9;
     }
 
+#right-panel {
+  position: relative; /* IMPORTANT */
+}
+
 .ad-box-right {
   position: absolute;
-  top: 260px; /* move up/down */
-  left: calc(100% - 260px); /* positions it to the right of the panel */
-  width: 240px;
+  top: 260px; /* adjust up/down */
+  left: 105%; /* pushes it OUTSIDE the panel */
+  width: 220px;
   background: rgba(255, 204, 0, 0.85);
-  padding: 15px;
+  padding: 12px;
   border-radius: 10px;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: bold;
   text-align: center;
   color: black;
   box-shadow: 0 0 10px rgba(0,0,0,0.4);
-  backdrop-filter: blur(4px);
 }
+
 
 
     #stats-box {
