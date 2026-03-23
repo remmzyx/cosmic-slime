@@ -26,7 +26,7 @@ You can see your best run stats.
 
 If you don't know how to play, we have a tutorial!
 
-If you want your song in the game, we can add it — just contact us through Discord. Socials at the end!
+If you want your song in the game, we can add it (read the music rules!!) — just contact us through Discord.This method has 50% chance of adding your song! Socials at the end!
 
 The mission is that you are a lost cosmic slime drifting through an abandoned neon asteroid belt. Each wave spawns hostile drones and glowing shard clusters. Collect shards to charge your shield, dodge drones, and survive as many waves as you can. The maze subtly shifts every round, so don’t get too comfortable.
 
