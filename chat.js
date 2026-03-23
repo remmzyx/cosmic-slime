@@ -14,3 +14,35 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+
+const chatBox = document.getElementById("chat-box");
+const chatInput = document.getElementById("chat-input");
+const chatSend = document.getElementById("chat-send");
+const usernameInput = document.getElementById("username-input");
+
+// SEND MESSAGE
+chatSend.onclick = () => {
+  const username = usernameInput.value || "Anonymous";
+  const text = chatInput.value;
+
+  if (text.trim() === "") return;
+
+  push(ref(db, "messages"), {
+    username,
+    text,
+    time: Date.now()
+  });
+
+  chatInput.value = "";
+};
+
+// RECEIVE MESSAGES
+onValue(ref(db, "messages"), snapshot => {
+  chatBox.innerHTML = "";
+  snapshot.forEach(child => {
+    const msg = child.val();
+    chatBox.innerHTML += `<div><b>${msg.username}:</b> ${msg.text}</div>`;
+  });
+
+  chatBox.scrollTop = chatBox.scrollHeight;
+});
