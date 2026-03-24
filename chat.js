@@ -152,7 +152,6 @@ onValue(ref(db, "messages"), snapshot => {
   });
   chatBox.scrollTop = chatBox.scrollHeight;
 });
-
 function escapeHtml(s) {
   if (!s) return "";
   return s.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
