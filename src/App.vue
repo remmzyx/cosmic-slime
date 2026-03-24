@@ -9,11 +9,13 @@ import { useFirebaseChat } from "./composables/useFirebaseChat";
 import { useGameEngine } from "./composables/useGameEngine";
 
 const game = useGameEngine();
+const canvasRef = game.canvasRef;
 const chat = useFirebaseChat();
 const isDark = ref(true);
 const audio = useAudioPlayer((text) => {
   game.logs.value.push({ id: `${Date.now()}-${Math.random()}`, time: new Date().toTimeString().slice(0, 8), text });
 });
+const audioRef = audio.audioRef;
 
 onMounted(() => {
   game.mount();
@@ -73,7 +75,7 @@ const activeTutorialText = computed(() => {
           @difficulty="game.setDifficulty"
         >
           <template #canvas>
-            <canvas ref="game.canvasRef" id="gameCanvas" width="640" height="480" />
+            <canvas ref="canvasRef" id="gameCanvas" width="640" height="480" />
           </template>
 
           <template #chat>
@@ -104,7 +106,7 @@ const activeTutorialText = computed(() => {
       </div>
 
       <div id="footer-note">This is just a local, silly HTML/JS game. No servers, no tracking, just vibes and cosmic slime.</div>
-      <audio ref="audio.audioRef" id="bgMusic" @ended="audio.onEnded" />
+      <audio ref="audioRef" id="bgMusic" @ended="audio.onEnded" />
     </div>
   </NConfigProvider>
 </template>
