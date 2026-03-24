@@ -13,7 +13,6 @@ import { useAuth } from "./composables/useAuth";
 import { useLeaderboard } from "./composables/useLeaderboard";
 
 const game = useGameEngine();
-const canvasRef = game.canvasRef;
 const authState = useAuth();
 const leaderboard = useLeaderboard(authState.user);
 const chat = useFirebaseChat();
@@ -21,7 +20,6 @@ const isDark = ref(true);
 const audio = useAudioPlayer((text) => {
   game.logs.value.push({ id: `${Date.now()}-${Math.random()}`, time: new Date().toTimeString().slice(0, 8), text });
 });
-const audioRef = audio.audioRef;
 
 // Sync chat username with auth displayName
 watch(
@@ -95,7 +93,7 @@ const activeTutorialText = computed(() => {
           @difficulty="game.setDifficulty"
         >
           <template #canvas>
-            <canvas ref="canvasRef" id="gameCanvas" width="640" height="480" />
+            <canvas :ref="game.canvasRef" id="gameCanvas" width="640" height="480" />
           </template>
 
           <template #auth>
@@ -147,7 +145,7 @@ const activeTutorialText = computed(() => {
       </div>
 
       <div id="footer-note">This is simple, silly HTML/JS game. Cloud server, no tracking, just vibes and cosmic slime.</div>
-      <audio ref="audioRef" id="bgMusic" @ended="audio.onEnded" />
+      <audio :ref="audio.audioRef" id="bgMusic" @ended="audio.onEnded" />
     </div>
   </NConfigProvider>
 </template>
