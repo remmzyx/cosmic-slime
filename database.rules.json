@@ -1,0 +1,76 @@
+{
+  "rules": {
+    "messages": {
+      ".read": true,
+      ".write": true,
+      "$messageId": {
+        "username": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 20"
+        },
+        "text": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 250"
+        },
+        "time": {
+          ".validate": "newData.isNumber()"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+    "leaderboard": {
+      ".read": true,
+      ".indexOn": ["score"],
+      "$entryId": {
+        ".write": "auth != null",
+        "score": {
+          ".validate": "newData.isNumber()"
+        },
+        "username": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 20"
+        },
+        "wave": {
+          ".validate": "newData.isNumber()"
+        },
+        "difficulty": {
+          ".validate": "newData.isString() && (newData.val() === 'easy' || newData.val() === 'normal' || newData.val() === 'hard')"
+        },
+        "timestamp": {
+          ".validate": "newData.isNumber()"
+        },
+        "userId": {
+          ".validate": "newData.isString() && auth != null && newData.val() === auth.uid"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+    "users": {
+      "$uid": {
+        "scores": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".indexOn": ["score"],
+          "$scoreId": {
+            ".write": "auth != null && auth.uid === $uid",
+            "score": {
+              ".validate": "newData.isNumber()"
+            },
+            "wave": {
+              ".validate": "newData.isNumber()"
+            },
+            "difficulty": {
+              ".validate": "newData.isString() && (newData.val() === 'easy' || newData.val() === 'normal' || newData.val() === 'hard')"
+            },
+            "timestamp": {
+              ".validate": "newData.isNumber()"
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        }
+      }
+    }
+  }
+}
