@@ -1,21 +1,7 @@
-import { initializeApp } from "firebase/app";
-import { getDatabase, limitToLast, onValue, push, query, ref, type DataSnapshot } from "firebase/database";
+import { limitToLast, onValue, push, query, ref, type DataSnapshot } from "firebase/database";
 import { onMounted, onUnmounted, ref as vueRef } from "vue";
 import type { ChatMessage } from "../types";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCm3wqbkBx-PMFpH7Cym9t08F_gSVNoZCc",
-  authDomain: "cosmic-slime.firebaseapp.com",
-  databaseURL: "https://cosmic-slime-default-rtdb.firebaseio.com",
-  projectId: "cosmic-slime",
-  storageBucket: "cosmic-slime.firebasestorage.app",
-  messagingSenderId: "646544734520",
-  appId: "1:646544734520:web:11732c1f79adb0687569cd",
-  measurementId: "G-4CL3ZWEDJT",
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+import { db } from "../firebase";
 const messagesRef = ref(db, "messages");
 
 function fromSnapshot(snapshot: DataSnapshot): ChatMessage[] {

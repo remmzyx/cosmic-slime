@@ -1,5 +1,50 @@
-# Vue 3 + TypeScript + Vite --------
+# Cosmic Slime (Vue 3 + TypeScript + Vite)
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+## Firebase setup from scratch (CLI)
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Login to Firebase:
+
+```bash
+npm run firebase:login
+```
+
+3. Run Firebase init:
+
+```bash
+npm run firebase:init
+```
+
+4. During `firebase init`, select these services as needed:
+- `Realtime Database` (for chat data/rules)
+- `Hosting` (to deploy Vite build)
+- `Emulators` (optional, for local testing)
+
+5. Recommended answers for Vue + Vite hosting:
+- Public directory: `dist`
+- Single-page app rewrite: `Yes`
+- Automatic GitHub deploys: `No` (or your preference)
+
+6. Create app env file and fill your Firebase web config values:
+
+```powershell
+Copy-Item .env.example .env.local
+```
+
+7. Run the app:
+
+```bash
+npm run dev
+```
+
+8. Build + deploy hosting:
+
+```bash
+npm run build
+npm run firebase:deploy:hosting
+```
