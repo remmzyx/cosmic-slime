@@ -39,6 +39,8 @@ const difficulties: DifficultyKey[] = ["easy", "normal", "hard", "chaos"];
   </div>
 
   <div id="right-panel">
+    <slot name="auth" />
+
     <slot name="chat" />
 
     <div id="mission-box">
@@ -58,6 +60,8 @@ const difficulties: DifficultyKey[] = ["easy", "normal", "hard", "chaos"];
         <div class="stat-line"><span class="stat-label">Total time alive:</span><span class="stat-value">{{ Math.floor(gameState.totalTimeAlive) }}s</span></div>
       </div>
     </div>
+
+    <slot name="leaderboard" />
 
     <div id="difficulty-box">
       <h3>Difficulty</h3>

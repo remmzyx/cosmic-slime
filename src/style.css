@@ -521,3 +521,252 @@ body.theme-light .music-track.active {
   opacity: 0.9;
   color: #00ffa3;
 }
+
+/* Auth Panel */
+#auth-panel {
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  padding: 8px;
+  margin-bottom: 10px;
+}
+
+.auth-title {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  color: #00ffa3;
+}
+
+.auth-loading {
+  font-size: 11px;
+  opacity: 0.7;
+  text-align: center;
+  padding: 8px;
+}
+
+.auth-user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.auth-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+
+.auth-username {
+  font-size: 12px;
+  color: #00f5ff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.auth-btn {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 6px;
+  font-size: 11px;
+}
+
+.auth-btn.google {
+  background: #4285f4;
+  color: white;
+  box-shadow: 0 0 10px rgba(66, 133, 244, 0.5);
+}
+
+.auth-btn.google:hover {
+  box-shadow: 0 0 16px rgba(66, 133, 244, 0.8);
+}
+
+.auth-btn.logout {
+  background: rgba(255, 75, 129, 0.8);
+  color: white;
+  box-shadow: 0 0 10px rgba(255, 75, 129, 0.5);
+}
+
+.auth-btn.logout:hover {
+  box-shadow: 0 0 16px rgba(255, 75, 129, 0.8);
+}
+
+.auth-divider {
+  text-align: center;
+  font-size: 10px;
+  opacity: 0.6;
+  margin: 8px 0;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.auth-form input {
+  padding: 6px;
+  font-size: 11px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  border-radius: 4px;
+  color: #e0faff;
+}
+
+.auth-form input::placeholder {
+  color: rgba(224, 250, 255, 0.5);
+}
+
+.auth-toggle {
+  background: transparent !important;
+  border: none !important;
+  color: #00f5ff !important;
+  font-size: 10px !important;
+  cursor: pointer;
+  margin-top: 6px;
+  box-shadow: none !important;
+  padding: 4px !important;
+}
+
+.auth-toggle:hover {
+  text-decoration: underline;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.auth-error {
+  color: #ff8aa8;
+  font-size: 10px;
+  margin-top: 6px;
+}
+
+/* Leaderboard Panel */
+#leaderboard-panel {
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  padding: 8px;
+}
+
+.leaderboard-title {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  color: #00ffa3;
+}
+
+.leaderboard-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 4px 8px !important;
+  font-size: 10px !important;
+  background: rgba(0, 0, 0, 0.4) !important;
+  border: 1px solid rgba(0, 255, 255, 0.3) !important;
+  border-radius: 4px !important;
+  color: #e0faff !important;
+  cursor: pointer;
+  box-shadow: none !important;
+}
+
+.tab-btn.active {
+  background: rgba(0, 255, 255, 0.2) !important;
+  color: #00f5ff !important;
+}
+
+.tab-btn:hover {
+  transform: none !important;
+}
+
+.leaderboard-list {
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.leaderboard-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  font-size: 10px;
+  border-bottom: 1px solid rgba(0, 255, 255, 0.1);
+}
+
+.leaderboard-row.is-current-user {
+  background: rgba(0, 255, 163, 0.15);
+}
+
+.leaderboard-row .rank {
+  width: 24px;
+  color: #00ffa3;
+  font-weight: 600;
+}
+
+.leaderboard-row .username {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.leaderboard-row .score {
+  color: #00f5ff;
+  font-weight: 600;
+}
+
+.leaderboard-row .wave,
+.leaderboard-row .difficulty,
+.leaderboard-row .date {
+  font-size: 9px;
+  opacity: 0.7;
+}
+
+.no-scores {
+  font-size: 11px;
+  opacity: 0.6;
+  text-align: center;
+  padding: 12px;
+}
+
+/* Chat auth required message */
+.chat-auth-required {
+  text-align: center;
+  padding: 12px;
+  font-size: 11px;
+  opacity: 0.7;
+  color: #00f5ff;
+  border-top: 1px solid rgba(0, 255, 255, 0.2);
+  margin-top: 8px;
+}
+
+/* Light theme overrides for new components */
+body.theme-light #auth-panel,
+body.theme-light #leaderboard-panel {
+  background: rgba(255, 255, 255, 0.78);
+  border-color: rgba(15, 23, 42, 0.18);
+}
+
+body.theme-light .auth-form input {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(15, 23, 42, 0.18);
+  color: #0f172a;
+}
+
+body.theme-light .tab-btn {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border-color: rgba(15, 23, 42, 0.18) !important;
+  color: #0f172a !important;
+}
+
+body.theme-light .tab-btn.active {
+  background: rgba(11, 117, 255, 0.15) !important;
+  color: #0b75ff !important;
+}

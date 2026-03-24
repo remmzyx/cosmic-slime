@@ -34,3 +34,28 @@ export interface Track {
   title: string;
   url: string;
 }
+
+export interface AuthUser {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+  photoURL: string | null;
+}
+
+export interface LeaderboardEntry {
+  id: string;
+  score: number;
+  username: string;
+  wave: number;
+  difficulty: DifficultyKey;
+  timestamp: number;
+  userId: string;
+}
+
+export interface UserScore {
+  id: string;
+  score: number;
+  wave: number;
+  difficulty: DifficultyKey;
+  timestamp: number;
+}

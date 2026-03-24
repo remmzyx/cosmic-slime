@@ -4,12 +4,18 @@ import { NButton, NConfigProvider, NSpace, NSwitch, darkTheme } from "naive-ui";
 import GameLayout from "./components/GameLayout.vue";
 import ChatPanel from "./components/ChatPanel.vue";
 import MusicPlayer from "./components/MusicPlayer.vue";
+import AuthPanel from "./components/AuthPanel.vue";
+import LeaderboardPanel from "./components/LeaderboardPanel.vue";
 import { useAudioPlayer } from "./composables/useAudioPlayer";
 import { useFirebaseChat } from "./composables/useFirebaseChat";
 import { useGameEngine } from "./composables/useGameEngine";
+import { useAuth } from "./composables/useAuth";
+import { useLeaderboard } from "./composables/useLeaderboard";
 
 const game = useGameEngine();
 const canvasRef = game.canvasRef;
+const authState = useAuth();
+const leaderboard = useLeaderboard(authState.user);
 const chat = useFirebaseChat();
 const isDark = ref(true);
 const audio = useAudioPlayer((text) => {
@@ -17,11 +23,25 @@ const audio = useAudioPlayer((text) => {
 });
 const audioRef = audio.audioRef;
 
+// Sync chat username with auth displayName
+watch(
+  authState.displayName,
+  (name) => {
+    chat.username.value = name;
+  },
+  { immediate: true }
+);
+
 onMounted(() => {
   game.mount();
   audio.loadTrack(audio.currentTrackIndex.value);
   game.registerMusicToggle(() => {
     void audio.toggleMusic();
+  });
+  game.registerGameOverHandler((score, wave, difficulty) => {
+    if (authState.isAuthenticated.value) {
+      void leaderboard.submitScore(score, wave, difficulty, authState.displayName.value);
+    }
   });
 });
 
@@ -78,15 +98,36 @@ const activeTutorialText = computed(() => {
             <canvas ref="canvasRef" id="gameCanvas" width="640" height="480" />
           </template>
 
+          <template #auth>
+            <AuthPanel
+              :user="authState.user.value"
+              :is-loading="authState.isLoading.value"
+              :error="authState.error.value"
+              @sign-in-with-google="authState.signInWithGoogle"
+              @sign-up-with-email="authState.signUpWithEmail"
+              @sign-in-with-email="authState.signInWithEmail"
+              @log-out="authState.logOut"
+            />
+          </template>
+
           <template #chat>
             <ChatPanel
               :username="chat.username.value"
               :input="chat.input.value"
               :messages="chat.messages.value"
               :error="chat.error.value"
+              :is-authenticated="authState.isAuthenticated.value"
               @update:username="chat.username.value = $event"
               @update:input="chat.input.value = $event"
               @send="chat.sendMessage"
+            />
+          </template>
+
+          <template #leaderboard>
+            <LeaderboardPanel
+              :global-leaderboard="leaderboard.globalLeaderboard.value"
+              :user-scores="leaderboard.userScores.value"
+              :user="authState.user.value"
             />
           </template>
 
@@ -105,7 +146,7 @@ const activeTutorialText = computed(() => {
         </GameLayout>
       </div>
 
-      <div id="footer-note">This is just a local, silly HTML/JS game. No servers, no tracking, just vibes and cosmic slime.</div>
+      <div id="footer-note">This is simple, silly HTML/JS game. Cloud server, no tracking, just vibes and cosmic slime.</div>
       <audio ref="audioRef" id="bgMusic" @ended="audio.onEnded" />
     </div>
   </NConfigProvider>

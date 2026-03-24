@@ -13,6 +13,7 @@ export function useGameEngine() {
   const canvasRef = ref<HTMLCanvasElement | null>(null);
   const logs = ref<GameLog[]>([]);
   const musicToggleHandler = ref<(() => void) | null>(null);
+  const gameOverHandler = ref<((score: number, wave: number, difficulty: DifficultyKey) => void) | null>(null);
   const tutorial = reactive({ active:false, step:0, steps:["Use W A S D to move your slime.","Collect a shard cluster.","Avoid drones - touching them deals damage.","Press SPACE to dash.","Great! Tutorial complete!"] });
 
   const gameState = reactive<GameState>({ running:false, paused:false, score:0, wave:1, health:100, shards:0, timeAlive:0, lastTimeStamp:0, difficulty:"easy", bestScore:0, bestWave:1, totalRuns:0, totalShards:0, totalTimeAlive:0 });
@@ -47,7 +48,7 @@ export function useGameEngine() {
   function resetPlayer(canvas:HTMLCanvasElement){ player.x=canvas.width/2; player.y=canvas.height/2; player.vx=0; player.vy=0; player.dashTimer=0; player.invincibleTimer=0; }
 
   function resetGame(){ const canvas=canvasRef.value; if(!canvas) return; gameState.score=0; gameState.wave=1; gameState.health=100; gameState.shards=0; gameState.timeAlive=0; gameState.lastTimeStamp=performance.now(); drones=[]; shards=[]; particles=[]; generateMaze(canvas); resetPlayer(canvas); spawnDronesForWave(canvas, gameState.wave); spawnShardsForWave(canvas, gameState.wave); logMessage("New run started. Good luck, cosmic slime."); }
-  function gameOver(reason:string){ gameState.running=false; logMessage(`Game over: ${reason}`); gameState.totalRuns += 1; gameState.totalTimeAlive += gameState.timeAlive; if(gameState.score>gameState.bestScore) gameState.bestScore=gameState.score; if(gameState.wave>gameState.bestWave) gameState.bestWave=gameState.wave; saveGame(); }
+  function gameOver(reason:string){ gameState.running=false; logMessage(`Game over: ${reason}`); gameState.totalRuns += 1; gameState.totalTimeAlive += gameState.timeAlive; if(gameState.score>gameState.bestScore) gameState.bestScore=gameState.score; if(gameState.wave>gameState.bestWave) gameState.bestWave=gameState.wave; saveGame(); gameOverHandler.value?.(gameState.score, gameState.wave, gameState.difficulty); }
   function attemptDash(){ if(player.dashTimer>0) return; const len=Math.hypot(player.vx, player.vy); if(len===0){ player.vx=randRange(-1,1)*player.dashPower; player.vy=randRange(-1,1)*player.dashPower; } else { player.vx += (player.vx/len)*player.dashPower; player.vy += (player.vy/len)*player.dashPower; } player.dashTimer=player.dashCooldown; player.invincibleTimer=0.35; spawnParticles(player.x, player.y, "0,255,163", 18); logMessage("Dash! Slime zips through the void."); }
   function togglePause(){ if(!gameState.running) return; gameState.paused=!gameState.paused; if(!gameState.paused) gameState.lastTimeStamp=performance.now(); logMessage(gameState.paused?"Game paused.":"Game resumed."); }
 
@@ -77,6 +78,7 @@ export function useGameEngine() {
   function mount(){ const canvas=canvasRef.value; if(!canvas) return; loadGame(); generateMaze(canvas); gameState.lastTimeStamp=performance.now(); rafId=requestAnimationFrame(gameLoop); window.addEventListener("keydown", onKeyDown); window.addEventListener("keyup", onKeyUp); }
   function unmount(){ cancelAnimationFrame(rafId); window.removeEventListener("keydown", onKeyDown); window.removeEventListener("keyup", onKeyUp); }
   const registerMusicToggle = (handler:()=>void) => { musicToggleHandler.value = handler; };
+  const registerGameOverHandler = (handler:(score: number, wave: number, difficulty: DifficultyKey) => void) => { gameOverHandler.value = handler; };
 
-  return { canvasRef, gameState, logs, stateLabel, tutorial, setDifficulty, startGame, startTutorial, registerMusicToggle, mount, unmount };
+  return { canvasRef, gameState, logs, stateLabel, tutorial, setDifficulty, startGame, startTutorial, registerMusicToggle, registerGameOverHandler, mount, unmount };
 }
