@@ -14,13 +14,15 @@ export function useGameEngine() {
   const logs = ref<GameLog[]>([]);
   const musicToggleHandler = ref<(() => void) | null>(null);
   const gameOverHandler = ref<((score: number, wave: number, difficulty: DifficultyKey) => void) | null>(null);
-  const tutorial = reactive({ active:false, step:0, steps:["Use W A S D to move your slime.","Collect a shard cluster.","Avoid drones - touching them deals damage.","Press SPACE to dash.","Great! Tutorial complete!"] });
+  const tutorial = reactive({ active:false, step:0, steps:["Drag the joystick to move (or W A S D on keyboard).","Collect a shard cluster.","Avoid drones - touching them deals damage.","Press SPACE or Dash to dash.","Great! Tutorial complete!"] });
 
   const gameState = reactive<GameState>({ running:false, paused:false, score:0, wave:1, health:100, shards:0, timeAlive:0, lastTimeStamp:0, difficulty:"easy", bestScore:0, bestWave:1, totalRuns:0, totalShards:0, totalTimeAlive:0 });
   const stateLabel = computed(() => !gameState.running ? "Idle" : gameState.paused ? "Paused" : "Running");
 
   const player: Player = { x:320, y:240, radius:14, vx:0, vy:0, speed:2.1, maxSpeed:3.4, friction:0.88, dashPower:5.5, dashCooldown:1.2, dashTimer:0, invincibleTimer:0, pulse:0 };
   const keys = reactive({ w:false, a:false, s:false, d:false, space:false, p:false, m:false });
+  const touchKeys = reactive({ w:false, a:false, s:false, d:false });
+  const touchAxis = reactive({ x:0, y:0 });
   let drones: Drone[] = []; let shards: Shard[] = []; let particles: Particle[] = []; let mazeLines: MazeLine[] = []; let rafId = 0;
 
   const difficultyConfig = {
@@ -52,7 +54,37 @@ export function useGameEngine() {
   function attemptDash(){ if(player.dashTimer>0) return; const len=Math.hypot(player.vx, player.vy); if(len===0){ player.vx=randRange(-1,1)*player.dashPower; player.vy=randRange(-1,1)*player.dashPower; } else { player.vx += (player.vx/len)*player.dashPower; player.vy += (player.vy/len)*player.dashPower; } player.dashTimer=player.dashCooldown; player.invincibleTimer=0.35; spawnParticles(player.x, player.y, "0,255,163", 18); logMessage("Dash! Slime zips through the void."); }
   function togglePause(){ if(!gameState.running) return; gameState.paused=!gameState.paused; if(!gameState.paused) gameState.lastTimeStamp=performance.now(); logMessage(gameState.paused?"Game paused.":"Game resumed."); }
 
-  function updateInput(dt:number){ let ax=0; let ay=0; if(keys.w) ay-=1; if(keys.s) ay+=1; if(keys.a) ax-=1; if(keys.d) ax+=1; const len=Math.hypot(ax,ay); if(len>0){ ax/=len; ay/=len; } player.vx += ax*player.speed; player.vy += ay*player.speed; player.vx *= player.friction; player.vy *= player.friction; const speed=Math.hypot(player.vx, player.vy); if(speed>player.maxSpeed){ player.vx=(player.vx/speed)*player.maxSpeed; player.vy=(player.vy/speed)*player.maxSpeed; } if(player.dashTimer>0) player.dashTimer -= dt; if(player.invincibleTimer>0) player.invincibleTimer -= dt; }
+  function updateInput(dt:number){ let ax=0; let ay=0; const jLen=Math.hypot(touchAxis.x, touchAxis.y); const deadzone=0.08; if(jLen>deadzone){ const normX=touchAxis.x/jLen; const normY=touchAxis.y/jLen; const strength=clamp((jLen-deadzone)/(1-deadzone),0,1); ax=normX*strength; ay=normY*strength; } else { const up=keys.w||touchKeys.w; const down=keys.s||touchKeys.s; const left=keys.a||touchKeys.a; const right=keys.d||touchKeys.d; if(up) ay-=1; if(down) ay+=1; if(left) ax-=1; if(right) ax+=1; const len=Math.hypot(ax,ay); if(len>0){ ax/=len; ay/=len; } } player.vx += ax*player.speed; player.vy += ay*player.speed; player.vx *= player.friction; player.vy *= player.friction; const speed=Math.hypot(player.vx, player.vy); if(speed>player.maxSpeed){ player.vx=(player.vx/speed)*player.maxSpeed; player.vy=(player.vy/speed)*player.maxSpeed; } if(player.dashTimer>0) player.dashTimer -= dt; if(player.invincibleTimer>0) player.invincibleTimer -= dt; }
+
+  function setTouchKey(key: "w" | "a" | "s" | "d", down: boolean) {
+    touchKeys[key] = down;
+  }
+
+  function setTouchAxis(x: number, y: number) {
+    touchAxis.x = clamp(x, -1, 1);
+    touchAxis.y = clamp(y, -1, 1);
+  }
+
+  function releaseTouchKeys() {
+    touchKeys.w = false;
+    touchKeys.a = false;
+    touchKeys.s = false;
+    touchKeys.d = false;
+    touchAxis.x = 0;
+    touchAxis.y = 0;
+  }
+
+  function triggerMusicToggle() {
+    musicToggleHandler.value?.();
+  }
+
+  function onWindowBlur() {
+    releaseTouchKeys();
+  }
+
+  function onVisibilityChange() {
+    if (document.hidden) releaseTouchKeys();
+  }
 
   function update(dt:number){ const canvas=canvasRef.value; if(!canvas) return; if(tutorial.active){ if(tutorial.step===0&&(player.vx!==0||player.vy!==0)) tutorial.step+=1; if(tutorial.step===1&&gameState.shards>0) tutorial.step+=1; if(tutorial.step===2&&gameState.health<100) tutorial.step+=1; if(tutorial.step===3&&player.invincibleTimer>0) tutorial.step+=1; if(tutorial.step>=tutorial.steps.length) tutorial.active=false; }
     updateInput(dt);
@@ -75,10 +107,29 @@ export function useGameEngine() {
   function onKeyDown(e:KeyboardEvent){ const t=e.target as HTMLElement | null; if(t&&(t.tagName==="INPUT"||t.tagName==="TEXTAREA")) return; const key=e.key.toLowerCase(); if(key==="w") keys.w=true; if(key==="a") keys.a=true; if(key==="s") keys.s=true; if(key==="d") keys.d=true; if(key===" "){ e.preventDefault(); if(!keys.space) attemptDash(); keys.space=true; } if(key==="p"){ if(!keys.p) togglePause(); keys.p=true; } if(key==="m"){ if(!keys.m) musicToggleHandler.value?.(); keys.m=true; } }
   function onKeyUp(e:KeyboardEvent){ const key=e.key.toLowerCase(); if(key==="w") keys.w=false; if(key==="a") keys.a=false; if(key==="s") keys.s=false; if(key==="d") keys.d=false; if(key===" ") keys.space=false; if(key==="p") keys.p=false; if(key==="m") keys.m=false; }
 
-  function mount(){ const canvas=canvasRef.value; if(!canvas) return; loadGame(); generateMaze(canvas); gameState.lastTimeStamp=performance.now(); rafId=requestAnimationFrame(gameLoop); window.addEventListener("keydown", onKeyDown); window.addEventListener("keyup", onKeyUp); }
-  function unmount(){ cancelAnimationFrame(rafId); window.removeEventListener("keydown", onKeyDown); window.removeEventListener("keyup", onKeyUp); }
+  function mount(){ const canvas=canvasRef.value; if(!canvas) return; loadGame(); generateMaze(canvas); gameState.lastTimeStamp=performance.now(); rafId=requestAnimationFrame(gameLoop); window.addEventListener("keydown", onKeyDown); window.addEventListener("keyup", onKeyUp); window.addEventListener("blur", onWindowBlur); document.addEventListener("visibilitychange", onVisibilityChange); }
+  function unmount(){ cancelAnimationFrame(rafId); window.removeEventListener("keydown", onKeyDown); window.removeEventListener("keyup", onKeyUp); window.removeEventListener("blur", onWindowBlur); document.removeEventListener("visibilitychange", onVisibilityChange); releaseTouchKeys(); }
   const registerMusicToggle = (handler:()=>void) => { musicToggleHandler.value = handler; };
   const registerGameOverHandler = (handler:(score: number, wave: number, difficulty: DifficultyKey) => void) => { gameOverHandler.value = handler; };
 
-  return { canvasRef, gameState, logs, stateLabel, tutorial, setDifficulty, startGame, startTutorial, registerMusicToggle, registerGameOverHandler, mount, unmount };
+  return {
+    canvasRef,
+    gameState,
+    logs,
+    stateLabel,
+    tutorial,
+    setDifficulty,
+    startGame,
+    startTutorial,
+    attemptDash,
+    togglePause,
+    triggerMusicToggle,
+    setTouchKey,
+    setTouchAxis,
+    releaseTouchKeys,
+    registerMusicToggle,
+    registerGameOverHandler,
+    mount,
+    unmount,
+  };
 }

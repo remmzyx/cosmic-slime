@@ -1,10 +1,13 @@
+import { Capacitor } from "@capacitor/core";
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import {
   createUserWithEmailAndPassword,
+  getRedirectResult,
   GoogleAuthProvider,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
   signOut,
   updateProfile,
   type User,
@@ -33,10 +36,17 @@ export function useAuth() {
   const displayName = computed(() => user.value?.displayName || user.value?.email || "Anonymous");
 
   onMounted(() => {
-    unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      user.value = mapFirebaseUser(firebaseUser);
-      isLoading.value = false;
-    });
+    void (async () => {
+      try {
+        await getRedirectResult(auth);
+      } catch {
+        // Stale or invalid redirect state — safe to ignore
+      }
+      unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+        user.value = mapFirebaseUser(firebaseUser);
+        isLoading.value = false;
+      });
+    })();
   });
 
   onUnmounted(() => {
@@ -47,7 +57,12 @@ export function useAuth() {
     error.value = "";
     try {
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      // WebView blocks or mishandles popups; full-page redirect works on Capacitor.
+      if (Capacitor.isNativePlatform()) {
+        await signInWithRedirect(auth, provider);
+      } else {
+        await signInWithPopup(auth, provider);
+      }
     } catch (e) {
       error.value = e instanceof Error ? e.message : "Google sign-in failed";
     }

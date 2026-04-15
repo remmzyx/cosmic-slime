@@ -1,11 +1,25 @@
 {
   "name": "vue-cosmic-slime",
   "private": true,
-  "version": "0.0.0",
+  "version": "9.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "adb:reverse": "adb reverse tcp:5173 tcp:5173",
+    "adb:reverse:list": "adb reverse --list",
+    "adb:reverse:remove": "adb reverse --remove tcp:5173",
     "build": "vue-tsc -b && vite build",
+    "cap:sync": "cap sync",
+    "android": "cap open android",
+    "cap:open:android": "cap open android",
+    "cap:open:ios": "cap open ios",
+    "mobile:sync": "npm run build && cap sync",
+    "android:apk:debug": "scripts\\build-apk-debug.cmd",
+    "android:bundle": "npm run build && cap sync android && cd android && gradlew.bat bundleRelease",
+    "android:verify-bundle": "scripts\\verify-play-bundle-signing.cmd",
+    "android:setup-keystore": "scripts\\setup-play-keystore.cmd",
+    "android:install-embedded": "scripts\\install-embedded-android.cmd",
+    "android:avd-software-gpu": "powershell -ExecutionPolicy Bypass -File scripts\\force-avd-software-gpu.ps1",
     "preview": "vite preview",
     "firebase:login": "firebase login",
     "firebase:init": "firebase init",
@@ -14,6 +28,10 @@
     "firebase:deploy:hosting": "firebase deploy --only hosting"
   },
   "dependencies": {
+    "@capacitor/android": "^8.3.0",
+    "@capacitor/cli": "^8.3.0",
+    "@capacitor/core": "^8.3.0",
+    "@capacitor/ios": "^8.3.0",
     "firebase": "^12.11.0",
     "naive-ui": "^2.44.1",
     "vue": "^3.5.30"
@@ -28,3 +46,4 @@
     "vue-tsc": "^3.2.5"
   }
 }
+
